@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI-SP系统操作教程</title>
+    <style>
+        :root {
+            --blue: #0f4c81;
+            --blue-light: #e3f2fd;
+            --gradient: linear-gradient(135deg, #0f4c81 0%, #006699 100%);
+            --shadow: 0 4px 24px rgba(0,0,0,0.08);
+            --radius: 18px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Microsoft YaHei", "微软雅黑", sans-serif;
+            background: #f0f4f9;
+            min-height: 100vh; overflow-x: hidden;
+        }
+
+        .bg-pattern {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none; z-index: 0; opacity: 0.5;
+            background:
+                radial-gradient(circle at 20% 20%, #dbeafe 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, #e0e7ff 0%, transparent 50%),
+                radial-gradient(circle at 60% 20%, #fce7f3 0%, transparent 40%);
+        }
+
+        .container {
+            position: relative; z-index: 1;
+            max-width: 100%; margin: 0 auto; padding: 15px;
+        }
+
+        .header {
+            background: var(--gradient);
+            color: white; padding: 28px 20px; border-radius: 22px;
+            margin-bottom: 24px; text-align: center;
+            box-shadow: 0 8px 32px rgba(15,76,129,0.25);
+            position: relative; overflow: hidden;
+        }
+        .header::after {
+            content: ''; position: absolute; top: -40px; right: -40px;
+            width: 120px; height: 120px; border-radius: 50%;
+            background: rgba(255,255,255,0.06);
+        }
+        .header::before {
+            content: ''; position: absolute; bottom: -30px; left: -30px;
+            width: 100px; height: 100px; border-radius: 50%;
+            background: rgba(255,255,255,0.04);
+        }
+        .header h1 { font-size: 24px; margin-bottom: 6px; position: relative; z-index: 1; }
+        .header p { font-size: 14px; opacity: 0.85; position: relative; z-index: 1; }
+
+        .role-page { display: block; }
+        .role-page.hidden { display: none; }
+        .role-grid { display: flex; flex-direction: column; gap: 14px; }
+        .role-card {
+            background: white; border-radius: var(--radius); padding: 22px 18px;
+            box-shadow: var(--shadow); cursor: pointer;
+            display: flex; align-items: center; gap: 16px;
+            border: 2px solid transparent; transition: all 0.25s ease;
+            position: relative; overflow: hidden;
+        }
+        .role-card::before {
+            content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+            width: 0; border-radius: 0 8px 8px 0;
+        }
+        .role-card.train::before { background: linear-gradient(180deg, #0ea5e9, #0284c7); }
+        .role-card.mgmt::before { background: linear-gradient(180deg, #8b5cf6, #7c3aed); }
+        .role-card.exam::before { background: linear-gradient(180deg, #ec4899, #db2777); }
+        .role-card.train:active::before,
+        .role-card.train:focus-visible::before { width: 5px; }
+        .role-card.mgmt:active::before,
+        .role-card.mgmt:focus-visible::before { width: 5px; }
+        .role-card.exam:active::before,
+        .role-card.exam:focus-visible::before { width: 5px; }
+        .role-card:active { transform: scale(0.97); box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+        .role-card .icon {
+            width: 54px; height: 54px; border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px; flex-shrink: 0;
+        }
+        .role-card.train .icon { background: #e0f2fe; }
+        .role-card.mgmt .icon { background: #ede9fe; }
+        .role-card.exam .icon { background: #fce7f3; }
+        .role-card .info h3 { font-size: 18px; color: #1e293b; font-weight: 700; }
+        .role-card .arrow { font-size: 22px; color: #cbd5e1; margin-left: auto; }
+
+        .detail-page { display: none; }
+        .detail-page.active { display: block; animation: fadeUp 0.35s ease; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+        .back-bar {
+            display: flex; align-items: center; gap: 10px; margin-bottom: 18px;
+            padding: 14px 18px; background: white; border-radius: 14px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06); cursor: pointer;
+            transition: background 0.2s;
+        }
+        .back-bar:active { background: #f8fafc; }
+        .back-bar .back-icon { font-size: 22px; color: var(--blue); font-weight: 700; }
+        .back-bar .back-text { font-size: 15px; color: var(--blue); font-weight: 600; }
+        .back-bar .role-tag {
+            margin-left: auto; font-size: 12px; padding: 5px 14px;
+            border-radius: 20px; font-weight: 600;
+        }
+        .role-tag.tag-train { background: #e0f2fe; color: #0369a1; }
+        .role-tag.tag-mgmt { background: #ede9fe; color: #6d28d9; }
+        .role-tag.tag-exam { background: #fce7f3; color: #be185d; }
+
+        .step-section {
+            background: white; border-radius: var(--radius); margin-bottom: 12px;
+            box-shadow: var(--shadow); overflow: hidden;
+            transition: box-shadow 0.25s;
+        }
+        .step-section:hover { box-shadow: 0 6px 30px rgba(0,0,0,0.1); }
+        .step-header {
+            padding: 16px 20px; display: flex; align-items: center; gap: 14px;
+            cursor: pointer; user-select: none; transition: background 0.2s;
+        }
+        .step-header:active { background: #f8fafc; }
+        .step-num {
+            width: 34px; height: 34px; border-radius: 50%;
+            background: var(--gradient);
+            color: white; display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 15px; flex-shrink: 0;
+            box-shadow: 0 3px 12px rgba(15,76,129,0.2);
+        }
+        .step-title { flex: 1; font-size: 16px; font-weight: 600; color: #1e293b; }
+        .step-toggle {
+            font-size: 12px; color: #94a3b8; transition: transform 0.3s ease;
+            width: 28px; height: 28px; border-radius: 50%; background: #f1f5f9;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .step-toggle.open { transform: rotate(180deg); background: var(--blue); color: white; }
+        .step-body { padding: 0; display: none; }
+        .step-body.open { display: block; }
+
+        .video-box {
+            background: #0f111a; border-radius: 0; padding: 0; margin: 0;
+        }
+        .video-box video {
+            width: 100%; display: block; border-radius: 0;
+        }
+
+        .footer {
+            text-align: center; padding: 24px 20px 30px;
+        }
+        .footer .brand {
+            font-size: 15px; color: #475569; font-weight: 600;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .footer .brand span { color: var(--blue); }
+        .footer .divider {
+            width: 40px; height: 2px; background: #cbd5e1;
+            margin: 14px auto; border-radius: 1px;
+        }
+        .footer .copy { font-size: 11px; color: #94a3b8; }
+
+        @media (min-width: 768px) {
+            .container { max-width: 640px; padding: 24px 20px; }
+            .header h1 { font-size: 28px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-pattern"></div>
+
+    <div class="container">
+        <div class="header">
+            <h1>AI-SP 操作教程</h1>
+            <p>医视界</p>
+        </div>
+
+        <!-- 首页 -->
+        <div class="role-page" id="rolePage">
+            <div class="role-grid">
+                <div class="role-card train" onclick="goTo('train')">
+                    <div class="icon">📖</div>
+                    <div class="info"><h3>学员训练</h3></div>
+                    <div class="arrow">›</div>
+                </div>
+                <div class="role-card mgmt" onclick="goTo('mgmt')">
+                    <div class="icon">⚙️</div>
+                    <div class="info"><h3>管理功能</h3></div>
+                    <div class="arrow">›</div>
+                </div>
+                <div class="role-card exam" onclick="goTo('exam')">
+                    <div class="icon">📝</div>
+                    <div class="info"><h3>考试功能</h3></div>
+                    <div class="arrow">›</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 学员训练 -->
+        <div class="detail-page" id="pageTrain">
+            <div class="back-bar" onclick="backHome()">
+                <span class="back-icon">‹</span>
+                <span class="back-text">返回首页</span>
+                <span class="role-tag tag-train">学员训练</span>
+            </div>
+            <div class="step-section">
+                <div class="step-header" onclick="toggleStep(this, 'APP端操作.mp4')">
+                    <div class="step-num">1</div>
+                    <span class="step-title">电子书包APP训练</span>
+                    <span class="step-toggle">▼</span>
+                </div>
+                <div class="step-body open">
+                    <div class="video-box">
+                        <video controls playsinline data-src="APP端操作.mp4">
+                            <source src="APP端操作.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                </div>
+            </div>
+            <div class="step-section">
+                <div class="step-header" onclick="toggleStep(this, '01登录+web训练.mp4')">
+                    <div class="step-num">2</div>
+                    <span class="step-title">PC端登录和训练</span>
+                    <span class="step-toggle">▼</span>
+                </div>
+                <div class="step-body">
+                    <div class="video-box">
+                        <video controls playsinline data-src="01登录+web训练.mp4">
+                            <source src="01登录+web训练.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 管理功能 -->
+        <div class="detail-page" id="pageMgmt">
+            <div class="back-bar" onclick="backHome()">
+                <span class="back-icon">‹</span>
+                <span class="back-text">返回首页</span>
+                <span class="role-tag tag-mgmt">管理功能</span>
+            </div>
+            <div class="step-section">
+                <div class="step-header" onclick="toggleStep(this, '01登录+web训练.mp4')">
+                    <div class="step-num">1</div>
+                    <span class="step-title">系统登录</span>
+                    <span class="step-toggle">▼</span>
+                </div>
+                <div class="step-body open">
+                    <div class="video-box">
+                        <video controls playsinline data-src="01登录+web训练.mp4">
+                            <source src="01登录+web训练.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                </div>
+            </div>
+            <div class="step-section">
+                <div class="step-header" onclick="toggleStep(this, '02生成病例.mp4')">
+                    <div class="step-num">2</div>
+                    <span class="step-title">生成病例</span>
+                    <span class="step-toggle">▼</span>
+                </div>
+                <div class="step-body">
+                    <div class="video-box">
+                        <video controls playsinline data-src="02生成病例.mp4">
+                            <source src="02生成病例.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                </div>
+            </div>
+            <div class="step-section">
+                <div class="step-header" onclick="toggleStep(this, '04考核-创建考试.mp4')">
+                    <div class="step-num">3</div>
+                    <span class="step-title">创建考试</span>
+                    <span class="step-toggle">▼</span>
+                </div>
+                <div class="step-body">
+                    <div class="video-box">
+                        <video controls playsinline data-src="04考核-创建考试.mp4">
+                            <source src="04考核-创建考试.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                </div>
+            </div>
+            <div class="step-section">
+                <div class="step-header" onclick="toggleStep(this, '07考核-查看考试成绩.mp4')">
+                    <div class="step-num">4</div>
+                    <span class="step-title">查看考试成绩</span>
+                    <span class="step-toggle">▼</span>
+                </div>
+                <div class="step-body">
+                    <div class="video-box">
+                        <video controls playsinline data-src="07考核-查看考试成绩.mp4">
+                            <source src="07考核-查看考试成绩.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 考试功能 -->
+        <div class="detail-page" id="pageExam">
+            <div class="back-bar" onclick="backHome()">
+                <span class="back-icon">‹</span>
+                <span class="back-text">返回首页</span>
+                <span class="role-tag tag-exam">考试功能</span>
+            </div>
+            <div class="step-section">
+                <div class="step-header" onclick="toggleStep(this, '05考生端设置和操作.mp4')">
+                    <div class="step-num">1</div>
+                    <span class="step-title">登录并配置考生端</span>
+                    <span class="step-toggle">▼</span>
+                </div>
+                <div class="step-body open">
+                    <div class="video-box">
+                        <video controls playsinline data-src="05考生端设置和操作.mp4">
+                            <source src="05考生端设置和操作.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                </div>
+            </div>
+            <div class="step-section">
+                <div class="step-header" onclick="toggleStep(this, '06考官评分操作.mp4')">
+                    <div class="step-num">2</div>
+                    <span class="step-title">考官登录及评分操作</span>
+                    <span class="step-toggle">▼</span>
+                </div>
+                <div class="step-body">
+                    <div class="video-box">
+                        <video controls playsinline data-src="06考官评分操作.mp4">
+                            <source src="06考官评分操作.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="brand">🔬 <span>医视界</span></div>
+            <div class="divider"></div>
+            <div class="copy">medseek_</div>
+        </div>
+    </div>
+
+    <script>
+        function pauseAllVideos() {
+            document.querySelectorAll('video').forEach(function(v) { v.pause(); });
+        }
+
+        function goTo(role) {
+            pauseAllVideos();
+            document.getElementById('rolePage').classList.add('hidden');
+            document.querySelectorAll('.detail-page').forEach(function(p) { p.classList.remove('active'); });
+            document.getElementById({ train: 'pageTrain', mgmt: 'pageMgmt', exam: 'pageExam' }[role]).classList.add('active');
+        }
+
+        function backHome() {
+            pauseAllVideos();
+            document.querySelectorAll('.detail-page').forEach(function(p) { p.classList.remove('active'); });
+            document.getElementById('rolePage').classList.remove('hidden');
+        }
+
+        function toggleStep(header) {
+            var body = header.nextElementSibling;
+            var toggle = header.querySelector('.step-toggle');
+            var isOpening = !body.classList.contains('open');
+
+            if (isOpening) {
+                pauseAllVideos();
+            }
+
+            body.classList.toggle('open');
+            toggle.classList.toggle('open');
+        }
+    </script>
+</body>
+</html>
